@@ -1,0 +1,7 @@
+# Ignore large PGM files
+results/mpi_strong_scaling/*.pgm
+results/omp_weak_scaling/*.pgm
+results/mpi_strong_scaling/*.pgm
+results/omp_weak_scaling/*.pgm
+results/mpi_strong_scaling/*.pgm
+results/omp_weak_scaling/*.pgm

@@ -1,0 +1,8 @@
+[core]
+	repositoryformatversion = 0
+	filemode = true
+	bare = true
+[remote "origin"]
+	url = https://github.com/pranay1610/final_hpc_ex_1_2.git
+	fetch = +refs/*:refs/*
+	mirror = true
