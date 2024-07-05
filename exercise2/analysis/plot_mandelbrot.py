@@ -5,7 +5,13 @@ def read_pgm(filename):
     with open(filename, 'rb') as f:
         header = f.readline()
         assert header.strip() == b'P5'
-        dimensions = f.readline()
+        
+        # Read past comments in the header if any
+        while True:
+            dimensions = f.readline()
+            if dimensions[0] != ord(b'#'):
+                break
+        
         width, height = [int(i) for i in dimensions.split()]
         max_val = int(f.readline().strip())
         assert max_val <= 255
@@ -21,7 +27,7 @@ def plot_image(image, output_filename):
     plt.show()
 
 if __name__ == "__main__":
-    input_filename = "mandelbrot.pgm"
-    output_filename = "mandelbrot_plot.png"
+    input_filename = "/u/dssc/pnarsipuram/final_hpc_ex_1_2/HPC/exercise2/mandelbrot.pgm"
+    output_filename = "/u/dssc/pnarsipuram/final_hpc_ex_1_2/HPC/exercise2/mandelbrot_plot.png"
     image = read_pgm(input_filename)
     plot_image(image, output_filename)
