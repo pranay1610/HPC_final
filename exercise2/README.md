@@ -45,6 +45,8 @@ HPC_final/
 │ │ ├── mandelbrot.c
 │ │ ├── image_utils.c
 │ ├── Makefile
+│ ├── NARSIPURAM_EX2c_report.pdf
+│ ├── exercise2.md
 ├── README.md
 ```
 
