@@ -21,6 +21,7 @@ The program accepts command-line arguments for the grid size (`nx` and `ny`), th
 The `MPI_Wtime()` function is used to measure the execution time of the computation, ensuring accurate timing in a parallel environment.
 
 ## Directory Structure
+```
 HPC_final/
 ├── exercise2/
 │ ├── analysis/
@@ -42,7 +43,7 @@ HPC_final/
 │ │ ├── image_utils.c
 │ ├── Makefile
 ├── README.md
-
+```
 
 ## Compiling and Running the Code
 
