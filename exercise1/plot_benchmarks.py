@@ -1,29 +1,90 @@
-import sys
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
-def process_and_plot(file_path):
-    data = pd.read_csv(file_path)
-    
-    # Plotting the results
-    plt.figure(figsize=(12, 8))
-    for algo_name in data['ALGO_NAME'].unique():
-        algo_data = data[data['ALGO_NAME'] == algo_name]
-        plt.plot(algo_data['Size'], algo_data['Avg Latency(us)'], label=algo_name)
-    
-    plt.xlabel('Message Size (bytes)')
-    plt.ylabel('Average Latency (us)')
-    plt.title('Latency Comparison for Different Algorithms')
-    plt.legend()
-    plt.grid(True)
+def plot_3d_heatmap(fig, data, operation, algo, ax):
+    subset = data[(data['Operation'] == operation) & (data['ALGO_NAME'] == algo)]
+    x = subset['Size']
+    y = subset['NP_total']
+    z = subset['Avg Latency(us)']
+    mesh = ax.plot_trisurf(np.log2(x), np.log2(y), np.log2(z), cmap='viridis', edgecolor='k')
+
+    ax.set_xlabel('Message size (bytes)', fontsize=10)
+    ax.set_ylabel('Number of Processes', fontsize=10)
+    ax.set_zlabel('log2(Avg Latency(us))', fontsize=10)
+    ax.set_title(f'{operation.capitalize()} Latency\nmap-by core, {algo} algorithm', fontsize=12)
+
+    yticks_values = [2, 4, 8, 16, 32, 64, 128, 256]
+    yticks_labels = ['$2^{%d}$' % int(np.log2(val)) for val in yticks_values]
+    ax.set_yticks(np.log2(yticks_values))
+    ax.set_yticklabels(yticks_labels, fontsize=8)
+
+    xticks_values = sorted(x.unique())
+    xticks_labels = ['$2^{%d}$' % int(np.log2(val)) for val in xticks_values]
+    ax.set_xticks(np.log2(xticks_values)[::3])
+    ax.set_xticklabels(xticks_labels[::3], fontsize=8)
+
+    fig.colorbar(mesh, ax=ax, shrink=0.5, aspect=5, pad=0.1)
+
+def plot_line_plot(data, operation, benchmark_type, ax):
+    subset = data[(data['Operation'] == operation) & (data['BenchmarkType'] == benchmark_type)]
+    for algo in subset['ALGO_NAME'].unique():
+        algo_data = subset[subset['ALGO_NAME'] == algo]
+        ax.plot(algo_data['NP_total'], algo_data['Avg Latency(us)'], label=algo)
+    ax.set_xlabel('Number of Cores', fontsize=10)
+    ax.set_ylabel('Avg Latency (us)', fontsize=10)
+    ax.set_title(f'{operation.capitalize()} {benchmark_type.capitalize()} Latency', fontsize=12)
+    ax.legend()
+
+def main():
+    # Load the data
+    broadcast_fixed = pd.read_csv('/home/probis/Documents/exercise1/broadcast_fixed.txt')
+    broadcast_full = pd.read_csv('/home/probis/Documents/exercise1/broadcast_full.txt')
+    gather_fixed = pd.read_csv('/home/probis/Documents/exercise1/gather_fixed.txt')
+    gather_full = pd.read_csv('/home/probis/Documents/exercise1/gather_full.txt')
+
+    # Add operation and benchmark type columns
+    broadcast_fixed['Operation'] = 'broadcast'
+    broadcast_fixed['BenchmarkType'] = 'fixed'
+    broadcast_full['Operation'] = 'broadcast'
+    broadcast_full['BenchmarkType'] = 'full'
+    gather_fixed['Operation'] = 'gather'
+    gather_fixed['BenchmarkType'] = 'fixed'
+    gather_full['Operation'] = 'gather'
+    gather_full['BenchmarkType'] = 'full'
+
+    # Combine data
+    combined_data = pd.concat([broadcast_fixed, broadcast_full, gather_fixed, gather_full], ignore_index=True)
+    print("Loaded data:\n", combined_data.head())
+
+    # Create the plot for broadcast
+    fig, axs = plt.subplots(2, 2, figsize=(12, 12), subplot_kw={'projection': '3d'})
+    algorithms = combined_data[combined_data['Operation'] == 'broadcast']['ALGO_NAME'].unique()
+    for ax, algo in zip(axs.ravel(), algorithms):
+        plot_3d_heatmap(fig, combined_data, 'broadcast', algo, ax)
     plt.tight_layout()
-    plt.savefig(f"latency_comparison_{file_path.split('/')[-1].split('.')[0]}.png")
+    plt.savefig('broadcast_heatmaps.png')
+    plt.show()
+
+    # Create the plot for gather
+    fig, axs = plt.subplots(2, 2, figsize=(12, 12), subplot_kw={'projection': '3d'})
+    algorithms = combined_data[combined_data['Operation'] == 'gather']['ALGO_NAME'].unique()
+    for ax, algo in zip(axs.ravel(), algorithms):
+        plot_3d_heatmap(fig, combined_data, 'gather', algo, ax)
+    plt.tight_layout()
+    plt.savefig('gather_heatmaps.png')
+    plt.show()
+
+    # Create line plots
+    fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(15, 10))
+    plot_line_plot(combined_data, 'broadcast', 'fixed', ax1)
+    plot_line_plot(combined_data, 'broadcast', 'full', ax2)
+    plot_line_plot(combined_data, 'gather', 'fixed', ax3)
+    plot_line_plot(combined_data, 'gather', 'full', ax4)
+    plt.tight_layout()
+    plt.savefig('line_plots.png')
     plt.show()
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: python3 plot_benchmarks.py <output_file>")
-        sys.exit(1)
-    
-    output_file = sys.argv[1]
-    process_and_plot(output_file)
+    main()
